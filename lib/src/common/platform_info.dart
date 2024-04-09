@@ -11,7 +11,7 @@ class PlatformInfo {
   static Future<PlatformInfo> fromMethodChannel(MethodChannel channel) async {
     // TODO: Update for every new versions.
     //  And there should a better way to fucking do this
-    final pluginVersion = "1.0.5";
+    final pluginVersion = "1.0.8";
 
     final platform = Platform.operatingSystem;
     String userAgent = "${platform}_Paystack_$pluginVersion";
@@ -27,7 +27,7 @@ class PlatformInfo {
     required String userAgent,
     required String paystackBuild,
     required String deviceId,
-  })   : userAgent = userAgent,
+  })  : userAgent = userAgent,
         paystackBuild = paystackBuild,
         deviceId = deviceId;
 
