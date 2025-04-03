@@ -51,6 +51,10 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+
+    buildTypes.each { type ->
+        type.proguardFiles = ['proguard-rules.pro']
+    }
 }
 
 dependencies {
