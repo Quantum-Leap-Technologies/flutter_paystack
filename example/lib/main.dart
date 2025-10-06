@@ -81,20 +81,20 @@ class _HomePageState extends State<HomePage> {
                       child: const Text('Initalize transaction from:'),
                     ),
                     new Expanded(
-                      child: new Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                        new RadioListTile<int>(
-                          value: 0,
-                          groupValue: _radioValue,
-                          onChanged: _handleRadioValueChanged,
-                          title: const Text('Local'),
-                        ),
-                        new RadioListTile<int>(
-                          value: 1,
-                          groupValue: _radioValue,
-                          onChanged: _handleRadioValueChanged,
-                          title: const Text('Server'),
-                        ),
-                      ]),
+                      child: RadioGroup<int>(
+                        groupValue: _radioValue,
+                        onChanged: _handleRadioValueChanged,
+                        child: new Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                          new RadioListTile<int>(
+                            value: 0,
+                            title: const Text('Local'),
+                          ),
+                          new RadioListTile<int>(
+                            value: 1,
+                            title: const Text('Server'),
+                          ),
+                        ]),
+                      ),
                     )
                   ],
                 ),

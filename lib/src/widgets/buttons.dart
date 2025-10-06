@@ -21,7 +21,7 @@ class WhiteButton extends _BaseButton {
           iconData: iconData,
           textStyle: new TextStyle(
               fontSize: 14.0,
-              color: Colors.black87.withOpacity(0.8),
+              color: Colors.black87.withValues(alpha: 0.8),
               fontWeight: bold ? FontWeight.bold : FontWeight.normal),
           color: Colors.white,
           borderSide: flat
@@ -119,7 +119,7 @@ class _BaseButton extends StatelessWidget {
                           children: <Widget>[
                             new Icon(
                               iconData,
-                              color: textStyle.color!.withOpacity(0.5),
+                              color: textStyle.color!.withValues(alpha: 0.5),
                             ),
                             const SizedBox(width: 2.0),
                             textWidget,
