@@ -11,6 +11,14 @@
 
 typedef void(^PSTCKAuthCallback)(void);
 
+// Debug-only tracing of the 3DS auth flow. Compiled out of release builds so
+// auth URLs never reach device logs in production.
+#ifdef DEBUG
+#define PSTCKLog(fmt, ...) NSLog((@"[Paystack] " fmt), ##__VA_ARGS__)
+#else
+#define PSTCKLog(...)
+#endif
+
 /**
  * View Controller subclass containing a `UIWebView` which will be used to display the Paystack web UI to perform the authorization.
  **/

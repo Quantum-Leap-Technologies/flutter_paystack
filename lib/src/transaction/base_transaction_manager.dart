@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_paystack/src/api/model/transaction_api_response.dart';
 import 'package:flutter_paystack/src/common/exceptions.dart';
@@ -54,6 +55,7 @@ abstract class BaseTransactionManager {
     }
 
     transaction.loadFromResponse(apiResponse);
+    if (kDebugMode) debugPrint('[Paystack] handling $apiResponse');
 
     return handleApiResponse(apiResponse);
   }
@@ -69,6 +71,7 @@ abstract class BaseTransactionManager {
   }
 
   CheckoutResponse notifyProcessingError(Object e) {
+    if (kDebugMode) debugPrint('[Paystack] error: ${e.runtimeType} $e');
     setProcessingOff();
 
     if (e is TimeoutException || e is SocketException) {
@@ -127,8 +130,10 @@ abstract class BaseTransactionManager {
     TransactionApiResponse apiResponse =
         TransactionApiResponse.unknownServerResponse();
 
+    if (kDebugMode) debugPrint('[Paystack] opening 3DS auth view');
     String? result = await Utils.methodChannel
         .invokeMethod<String>('getAuthorization', {"authUrl": url});
+    if (kDebugMode) debugPrint('[Paystack] 3DS auth returned: $result');
 
     if (result != null) {
       try {

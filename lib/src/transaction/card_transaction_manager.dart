@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_paystack/src/api/model/transaction_api_response.dart';
 import 'package:flutter_paystack/src/api/request/card_request_body.dart';
@@ -29,12 +30,15 @@ class CardTransactionManager extends BaseTransactionManager {
 
   @override
   postInitiate() async {
+    if (kDebugMode) debugPrint('[Paystack] encrypting card data...');
     chargeRequestBody =
         await CardRequestBody.getChargeRequestBody(publicKey, charge);
     validateRequestBody = ValidateRequestBody();
+    if (kDebugMode) debugPrint('[Paystack] card data encrypted');
   }
 
   Future<CheckoutResponse> chargeCard() async {
+    if (kDebugMode) debugPrint('[Paystack] chargeCard start processing=$processing validCard=${charge.card?.isValid()}');
     try {
       if (charge.card == null || !charge.card!.isValid()) {
         return getCardInfoFrmUI(charge.card);
@@ -43,6 +47,7 @@ class CardTransactionManager extends BaseTransactionManager {
         return sendCharge();
       }
     } catch (e) {
+      if (kDebugMode) debugPrint('[Paystack] chargeCard threw: ${e.runtimeType} $e');
       if (!(e is ProcessingException)) {
         setProcessingOff();
       }

@@ -60,8 +60,14 @@ BOOL handlingRedirectURL;
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+    PSTCKLog(@"auth view appeared, loading %@", self.authURL);
     [self.authenticationWebView loadRequest:[NSURLRequest requestWithURL:self.authURL]];
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    PSTCKLog(@"auth view disappeared (swipe-dismiss if no completion logged before this)");
 }
 
 - (void)viewWillLayoutSubviews {
@@ -73,6 +79,7 @@ BOOL handlingRedirectURL;
 
 - (void)tappedCancelButton:(id)cancelButton {
     #pragma unused(cancelButton)
+    PSTCKLog(@"cancel tapped");
     self.completion();
 }
 
@@ -88,6 +95,7 @@ BOOL handlingRedirectURL;
     // Prevent loading URL if it is the redirectURL
     // The intention is to only requery 3DS auths
     handlingRedirectURL = !([url rangeOfString:@"paystack.co/charge/three_d_response/"].location == NSNotFound);
+    PSTCKLog(@"navigate: %@ mainFrame=%d isRedirect=%d", url, navigationAction.targetFrame.isMainFrame, handlingRedirectURL);
     
     // Processing has finished?
     if (handlingRedirectURL) {
@@ -102,11 +110,13 @@ BOOL handlingRedirectURL;
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     #pragma unused(webView, navigation)
+    PSTCKLog(@"didFinish: %@", webView.URL);
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
 }
 
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
     #pragma unused(webView, navigation)
+    PSTCKLog(@"didFail: %@ error=%@", webView.URL, error);
     // Turn off network activity indicator upon failure to load web view
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     
@@ -119,6 +129,20 @@ BOOL handlingRedirectURL;
     if (!handlingRedirectURL) {
         self.completion();
     }
+}
+
+// Logging only: provisional (early) load failures are currently not handled,
+// so a DNS/SSL/offline failure leaves the page blank with no completion.
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+    #pragma unused(navigation)
+    PSTCKLog(@"didFailProvisional: %@ error=%@", webView.URL, error);
+}
+
+// Logging only: popups (window.open / target=_blank) are currently dropped.
+- (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
+    #pragma unused(webView, configuration, windowFeatures)
+    PSTCKLog(@"popup blocked: %@", navigationAction.request.URL);
+    return nil;
 }
 
 @end
