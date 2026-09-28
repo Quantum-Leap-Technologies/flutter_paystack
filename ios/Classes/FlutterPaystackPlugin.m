@@ -13,6 +13,7 @@
             binaryMessenger:[registrar messenger]];
     UIViewController *viewController =
     [UIApplication sharedApplication].delegate.window.rootViewController;
+  PSTCKLog(@"register: rootViewController=%@", viewController);
   FlutterPaystackPlugin* instance = [[FlutterPaystackPlugin alloc] initWithViewController: viewController];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
@@ -45,20 +46,55 @@
 }
 
 
+// Resolve the presenter when it's needed, not at registration. Under the
+// UIScene lifecycle (FlutterImplicitEngineDelegate) plugins register before any
+// window exists, so the controller captured in registerWithRegistrar is nil and
+// presenting from it silently does nothing.
+- (UIViewController *)topViewController {
+    UIViewController *root = nil;
+    if (@available(iOS 13.0, *)) {
+        for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if (![scene isKindOfClass:[UIWindowScene class]]) continue;
+            for (UIWindow *window in ((UIWindowScene *)scene).windows) {
+                if (window.isKeyWindow) { root = window.rootViewController; break; }
+            }
+            if (root != nil) break;
+        }
+    }
+    if (root == nil) root = [UIApplication sharedApplication].delegate.window.rootViewController;
+    if (root == nil) root = _viewController;
+    while (root.presentedViewController != nil) root = root.presentedViewController;
+    return root;
+}
+
 - (void) requestAuth:(NSString * _Nonnull) url result:(FlutterResult)result {
+    UIViewController *presenter = [self topViewController];
+    PSTCKLog(@"requestAuth: url=%@ presenter=%@", url, presenter);
+    if (presenter == nil) {
+        // Fail instead of leaving the Dart side awaiting a result forever.
+        result([FlutterError errorWithCode:@"no_view_controller"
+                                   message:@"Unable to present 3DS authorization"
+                                   details:nil]);
+        return;
+    }
+    __block UINavigationController *nc = nil;
     PSTCKAuthViewController* authorizer = [[[PSTCKAuthViewController alloc] init]
                                            initWithURL:[NSURL URLWithString:url]
                                            handler:^{
-                                               [self->_viewController dismissViewControllerAnimated:YES completion:nil];
+                                               PSTCKLog(@"completion: returning requery to Dart");
+                                               [nc dismissViewControllerAnimated:YES completion:nil];
+                                               nc = nil;
                                                NSDictionary *response = @{ @"status": @"requery", @"message": @"Reaffirm Transaction Status on Server"};
                                                result([[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:[response copy] options:0 error:NULL] encoding:NSUTF8StringEncoding]);
                                            }];
-    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:authorizer];
+    nc = [[UINavigationController alloc] initWithRootViewController:authorizer];
     if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
         nc.modalPresentationStyle = UIModalPresentationFormSheet;
     }
     
-    [self->_viewController presentViewController:nc animated:YES completion:nil];
+    [presenter presentViewController:nc animated:YES completion:^{
+        PSTCKLog(@"requestAuth: auth view presented");
+    }];
 }
 
 @end

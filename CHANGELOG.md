@@ -1,3 +1,7 @@
+## 1.0.9
+* Fixed iOS 3DS card payments hanging on the processing spinner in apps using the UIScene lifecycle: the auth view is now presented from the active scene's top view controller, and returns an error instead of hanging if none is found.
+* Added debug-build-only tracing of the charge and 3DS flow.
+
 ## 1.0.7
 * Fixed an issue where only one bank showed-up in the banks dropdown
 * Fixed build issues caused by androidx material library
